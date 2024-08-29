@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="utf-8"?>
+<InstructionData xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <DateTime>133689731797641410</DateTime>
+  <GameVersion>0.2.5166.23504</GameVersion>
+  <Title>Farming incl lighting</Title>
+  <Description>​</Description>
+  <Author>RZR0</Author>
+  <WorkshopFileHandle>3315979593</WorkshopFileHandle>
+  <Instructions>define hashGrowLight -1758710260
+define hashHarvie 958056199
+define hashHydroponicDevice -1841632400
+
+define addrIdentifiedTrays 384
+
+alias mainVarDeviceCount r1
+alias mainVarLoopIdx r2
+alias mainVarCurDeviceAddr r3
+alias mainVarCurDeviceNameHash r4
+
+alias findDevicesParamArrayAddr r1
+alias findDevicesVarMinHash r2
+alias findDevicesVarMaxHash r3
+alias findDevicesVarCurHash r4
+alias findDevicesVarCurCheckHash r5
+alias findDevicesVarItemCount r6
+alias findDevicesVarArrayCurAddr r7
+
+alias performFarmingParamNameHash r1
+alias performFarmingVarQuantity r2
+alias performFarmingVarCounter r3
+
+main:
+push ra
+jal lightCycle
+pop ra
+push ra
+push addrIdentifiedTrays
+jal findDevices
+pop mainVarDeviceCount
+pop ra
+move mainVarLoopIdx 1
+mainLoopStart:
+bgt mainVarLoopIdx mainVarDeviceCount mainLoopEnd
+add mainVarCurDeviceAddr addrIdentifiedTrays mainVarLoopIdx
+#&gt; read arr
+move r0 sp
+move sp mainVarCurDeviceAddr
+peek mainVarCurDeviceNameHash
+move sp r0
+s d0 Setting mainVarLoopIdx
+push ra
+push r1
+push r2
+push r3
+push mainVarCurDeviceNameHash
+jal performFarming
+pop r3
+pop r2
+pop r1
+pop ra
+mainLoopContinue:
+add mainVarLoopIdx mainVarLoopIdx 1
+yield
+j mainLoopStart
+mainLoopEnd:
+yield
+j main
+
+# () -&gt; None
+lightCycle:
+sb hashGrowLight On 0
+sleep 300
+sb hashGrowLight On 1
+sleep 600
+j ra
+
+# (arrayAddr) -&gt; deviceCount
+findDevices:
+pop findDevicesParamArrayAddr
+#&gt; store arr
+move r0 sp
+move sp findDevicesParamArrayAddr
+push HASH("1")
+push HASH("2")
+push HASH("3")
+push HASH("4")
+push HASH("5")
+push HASH("6")
+push HASH("7")
+push HASH("8")
+push HASH("9")
+sub findDevicesVarItemCount sp findDevicesParamArrayAddr # calc array size
+move sp r0
+#&lt; store arr
+push findDevicesVarItemCount
+j ra
+
+# (nameHash) -&gt; None
+performFarming:
+pop performFarmingParamNameHash
+lbns r0 hashHydroponicDevice performFarmingParamNameHash 0 Occupied Average
+beq r0 0 performFarmingPlanting
+lbns r0 hashHydroponicDevice performFarmingParamNameHash 0 Growth Average
+blt r0 4 performFarmingEnd
+performFarmingLoopHarvestStart:
+sbn hashHarvie performFarmingParamNameHash Harvest 1
+yield
+lbns r0 hashHydroponicDevice performFarmingParamNameHash 0 Occupied Average
+beq r0 1 performFarmingLoopHarvestStart
+performFarmingPlanting:
+yield
+lbns r0 hashHarvie performFarmingParamNameHash 0 Occupied Average
+bne r0 1 performFarmingEnd
+sbn hashHarvie performFarmingParamNameHash Plant 1
+performFarmingEnd:
+j ra</Instructions>
+</InstructionData>

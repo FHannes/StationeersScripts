@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="utf-8"?>
+<InstructionData xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <DateTime>133688932907281323</DateTime>
+  <GameVersion>0.2.5166.23504</GameVersion>
+  <Title>Farmer</Title>
+  <Description>​</Description>
+  <Author>RZR0</Author>
+  <WorkshopFileHandle>0</WorkshopFileHandle>
+  <Instructions>define hashGrowLight -1758710260
+define hashHarvie 958056199
+define hashHydroponicDevice -1841632400
+
+define addrIdentifiedTrays 384
+
+alias mainVarDeviceCount r1
+alias mainVarLoopIdx r2
+alias mainVarCurDeviceAddr r3
+alias mainVarCurDeviceNameHash r4
+alias mainVarCurDeviceMaturity r5
+alias findDevicesParamDeviceId r1
+alias findDevicesParamTrayArrayAddr r2
+alias findDevicesVarMinHash r3
+alias findDevicesVarMaxHash r4
+alias findDevicesVarCurHash r5
+alias findDevicesVarCurCheckHash r6
+alias findDevicesVarItemCount r7
+alias findDevicesVarArrayCurAddr r8
+
+main:
+push ra
+#jal lightCycle
+pop ra
+push ra
+push hashHydroponicDevice
+push addrIdentifiedTrays
+jal findDevices
+pop mainVarDeviceCount
+pop ra
+move mainVarLoopIdx 0
+mainLoopStart:
+bge mainVarLoopIdx mainVarDeviceCount mainLoopEnd
+add mainVarCurDeviceAddr addrIdentifiedTrays mainVarLoopIdx
+#&gt; read arr
+move r0 sp
+move sp mainVarCurDeviceAddr
+peek mainVarCurDeviceNameHash
+move sp r0
+#&lt; read arr
+lbn mainVarCurDeviceMaturity hashHydroponicDevice mainVarCurDeviceNameHash Mature Average
+bne mainVarCurDeviceMaturity 1 mainLoopContinue
+sbn hashHarvie mainVarCurDeviceNameHash Harvest 1
+mainLoopContinue:
+add mainVarLoopIdx mainVarLoopIdx 1
+j mainLoopStart
+mainLoopEnd:
+yield
+j main
+
+# () -&gt; None
+lightCycle:
+sb hashGrowLight On 0
+sleep 300
+sb hashGrowLight On 1
+sleep 600
+j ra
+
+# (deviceId, trayArrayAddr) -&gt; deviceCount
+findDevices:
+pop findDevicesParamTrayArrayAddr
+pop findDevicesParamDeviceId
+lb findDevicesVarMinHash findDevicesParamDeviceId NameHash Minimum
+lb findDevicesVarMaxHash findDevicesParamDeviceId NameHash Maximum
+move findDevicesVarItemCount 0
+move findDevicesVarArrayCurAddr findDevicesParamTrayArrayAddr
+# loop r4
+move findDevicesVarCurHash findDevicesVarMinHash
+findDevicesLoopStart:
+s d0 Setting findDevicesVarCurHash
+bgt findDevicesVarCurHash findDevicesVarMaxHash findDevicesLoopEnd
+lb findDevicesVarCurCheckHash findDevicesVarCurHash PrefabHash Average
+bne findDevicesVarCurCheckHash findDevicesParamDeviceId findDevicesLoopContinue
+#&gt; store arr
+move r0 sp
+move sp findDevicesVarArrayCurAddr
+push findDevicesVarCurHash
+move findDevicesVarArrayCurAddr sp
+move sp r0
+#&lt; store arr
+add findDevicesVarItemCount findDevicesVarItemCount 1
+findDevicesLoopContinue:
+add findDevicesVarCurHash findDevicesVarCurHash 1
+j findDevicesLoopStart
+findDevicesLoopEnd:
+push findDevicesVarItemCount
+j ra</Instructions>
+</InstructionData>

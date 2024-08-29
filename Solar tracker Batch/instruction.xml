@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<InstructionData xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <DateTime>133673356134341051</DateTime>
+  <GameVersion>0.2.5087.23112</GameVersion>
+  <Title>Solar tracker Batch</Title>
+  <Description>Solar Panel 1​</Description>
+  <Author>RZR0</Author>
+  <WorkshopFileHandle>0</WorkshopFileHandle>
+  <Instructions>define hashSolarPanel -2045627372
+
+alias pnlHoriz r0
+alias pnlVert r1
+
+move pnlHoriz 0 # Horizontal panel angle
+move pnlVert 0 # Vertical panel angle
+
+main:
+sbn hashSolarPanel HASH("Solar Panel") Horizontal pnlHoriz
+sbn hashSolarPanel HASH("Solar Panel") Vertical pnlVert
+
+l pnlHoriz d0 Horizontal
+l r3 d0 Vertical
+sub pnlVert 90 r3
+j main</Instructions>
+</InstructionData>
