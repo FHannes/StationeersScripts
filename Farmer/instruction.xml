@@ -16,81 +16,120 @@ alias mainVarDeviceCount r1
 alias mainVarLoopIdx r2
 alias mainVarCurDeviceAddr r3
 alias mainVarCurDeviceNameHash r4
-alias mainVarCurDeviceMaturity r5
-alias findDevicesParamDeviceId r1
-alias findDevicesParamTrayArrayAddr r2
-alias findDevicesVarMinHash r3
-alias findDevicesVarMaxHash r4
-alias findDevicesVarCurHash r5
-alias findDevicesVarCurCheckHash r6
-alias findDevicesVarItemCount r7
-alias findDevicesVarArrayCurAddr r8
+alias findDevicesParamArrayAddr r1
+alias findDevicesVarMinHash r2
+alias findDevicesVarMaxHash r3
+alias findDevicesVarCurHash r4
+alias findDevicesVarCurCheckHash r5
+alias findDevicesVarItemCount r6
+alias findDevicesVarArrayCurAddr r7
+alias performFarmingParamNameHash r1
+alias performFarmingVarQuantity r2
+alias performFarmingVarCounter r3
+alias waitForHarvieParamNameHash r1
+alias waitForHarvieVarCounter r2
 
 main:
 push ra
-#jal lightCycle
-pop ra
-push ra
-push hashHydroponicDevice
 push addrIdentifiedTrays
 jal findDevices
 pop mainVarDeviceCount
 pop ra
-move mainVarLoopIdx 0
+move mainVarLoopIdx 1
 mainLoopStart:
-bge mainVarLoopIdx mainVarDeviceCount mainLoopEnd
+bgt mainVarLoopIdx mainVarDeviceCount mainLoopEnd
 add mainVarCurDeviceAddr addrIdentifiedTrays mainVarLoopIdx
 #&gt; read arr
 move r0 sp
 move sp mainVarCurDeviceAddr
 peek mainVarCurDeviceNameHash
 move sp r0
-#&lt; read arr
-lbn mainVarCurDeviceMaturity hashHydroponicDevice mainVarCurDeviceNameHash Mature Average
-bne mainVarCurDeviceMaturity 1 mainLoopContinue
-sbn hashHarvie mainVarCurDeviceNameHash Harvest 1
+s d0 Setting mainVarLoopIdx
+push ra
+push r1
+push r2
+push r3
+push mainVarCurDeviceNameHash
+jal performFarming
+pop r3
+pop r2
+pop r1
+pop ra
 mainLoopContinue:
 add mainVarLoopIdx mainVarLoopIdx 1
+yield
 j mainLoopStart
 mainLoopEnd:
 yield
 j main
 
-# () -&gt; None
-lightCycle:
-sb hashGrowLight On 0
-sleep 300
-sb hashGrowLight On 1
-sleep 600
-j ra
-
-# (deviceId, trayArrayAddr) -&gt; deviceCount
+# (arrayAddr) -&gt; deviceCount
 findDevices:
-pop findDevicesParamTrayArrayAddr
-pop findDevicesParamDeviceId
-lb findDevicesVarMinHash findDevicesParamDeviceId NameHash Minimum
-lb findDevicesVarMaxHash findDevicesParamDeviceId NameHash Maximum
-move findDevicesVarItemCount 0
-move findDevicesVarArrayCurAddr findDevicesParamTrayArrayAddr
-# loop r4
-move findDevicesVarCurHash findDevicesVarMinHash
-findDevicesLoopStart:
-s d0 Setting findDevicesVarCurHash
-bgt findDevicesVarCurHash findDevicesVarMaxHash findDevicesLoopEnd
-lb findDevicesVarCurCheckHash findDevicesVarCurHash PrefabHash Average
-bne findDevicesVarCurCheckHash findDevicesParamDeviceId findDevicesLoopContinue
+pop findDevicesParamArrayAddr
 #&gt; store arr
 move r0 sp
-move sp findDevicesVarArrayCurAddr
-push findDevicesVarCurHash
-move findDevicesVarArrayCurAddr sp
+move sp findDevicesParamArrayAddr
+push HASH("1")
+push HASH("2")
+push HASH("3")
+push HASH("4")
+push HASH("5")
+push HASH("6")
+push HASH("7")
+push HASH("8")
+push HASH("9")
+sub findDevicesVarItemCount sp findDevicesParamArrayAddr # calc array size
 move sp r0
 #&lt; store arr
-add findDevicesVarItemCount findDevicesVarItemCount 1
-findDevicesLoopContinue:
-add findDevicesVarCurHash findDevicesVarCurHash 1
-j findDevicesLoopStart
-findDevicesLoopEnd:
 push findDevicesVarItemCount
-j ra</Instructions>
+j ra
+
+# (nameHash) -&gt; None
+performFarming:
+pop performFarmingParamNameHash
+lbns r0 hashHydroponicDevice performFarmingParamNameHash 0 Occupied Average
+beq r0 0 performFarmingPlanting
+lbns r0 hashHydroponicDevice performFarmingParamNameHash 0 Growth Average
+blt r0 4 performFarmingEnd
+performFarmingLoopHarvestStart:
+sbn hashHarvie performFarmingParamNameHash Harvest 1
+push ra
+push r1
+push r2
+push performFarmingParamNameHash # arg
+jal waitForHarvie
+pop r2
+pop r1
+pop ra
+lbns r0 hashHydroponicDevice performFarmingParamNameHash 0 Occupied Average
+beq r0 1 performFarmingLoopHarvestStart
+performFarmingPlanting:
+sleep 1
+lbns r0 hashHarvie performFarmingParamNameHash 0 Occupied Average
+bne r0 1 performFarmingEnd
+sbn hashHarvie performFarmingParamNameHash Plant 1
+performFarmingEnd:
+j ra
+
+# (nameHash) -&gt; None
+waitForHarvie:
+pop waitForHarvieParamNameHash
+move waitForHarvieVarCounter 0
+waitForHarvieLoopStart:
+add waitForHarvieVarCounter waitForHarvieVarCounter 1
+bge waitForHarvieVarCounter 15 waitForHarvieDoReset
+yield
+lbn r0 hashHarvie waitForHarvieParamNameHash Activate Average
+bne r0 0 waitForHarvieLoopStart
+j ra # exit
+waitForHarvieDoReset:
+s d0 Setting 9901
+sbn hashHarvie waitForHarvieParamNameHash Lock 0
+sbn hashHarvie waitForHarvieParamNameHash ClearMemory 1
+sbn hashHarvie waitForHarvieParamNameHash Activate 0
+sbn hashHarvie waitForHarvieParamNameHash On 0
+yield
+sbn hashHarvie waitForHarvieParamNameHash On 1
+move waitForHarvieVarCounter 0
+j ra # exit</Instructions>
 </InstructionData>
